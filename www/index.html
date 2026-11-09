@@ -1,0 +1,827 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Multiplica y Reparte</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#E8F5FF">
+<style>
+@font-face{font-family:'Baloo 2';font-weight:500;font-display:swap;src:url(fonts/baloo-2-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Baloo 2';font-weight:600;font-display:swap;src:url(fonts/baloo-2-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Baloo 2';font-weight:700;font-display:swap;src:url(fonts/baloo-2-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Baloo 2';font-weight:800;font-display:swap;src:url(fonts/baloo-2-latin-800-normal.woff2) format('woff2')}
+@font-face{font-family:'Lilita One';font-weight:400;font-display:swap;src:url(fonts/lilita-one-latin-400-normal.woff2) format('woff2')}
+/* Layout: patio de juegos colorido sobre cuadriculado celeste; una columna central de app (máx 560px), cada pantalla ocupa el alto del teléfono */
+:root{
+  --paper:#E8F5FF; --grid:#D2EAFB; --ink:#2B2350; --muted:#675F8E; --card:#FFFFFF; --line:#C7DAEE; --lock:#C9CEE2;
+  --mul:#FF4F9A; --mul-deep:#C92A72; --mul-soft:#FFE1EF;
+  --div:#1E96F5; --div-deep:#0B68C2; --div-soft:#DBEEFF;
+  --grape:#9B5CFF; --orange:#FF8A1F; --lime:#2DBE60;
+  --sun:#FFC21A; --ok:#2DBE60; --ok-soft:#DDF8E6; --bad:#FF5A4E; --bad-soft:#FFE3E0;
+  --on-accent:#FFFFFF;
+  --f-display:"Lilita One","Baloo 2","Arial Rounded MT Bold",system-ui,sans-serif;
+  --f-body:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --accent:var(--mul); --accent-deep:var(--mul-deep); --accent-soft:var(--mul-soft);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#1A1640; --grid:#241E52; --ink:#F4F1FF; --muted:#B4ACDD; --card:#272058; --line:#110D2E; --lock:#463E7A;
+    --mul:#FF70B1; --mul-deep:#B53A78; --mul-soft:#43204D;
+    --div:#4DB5FF; --div-deep:#1C6FB5; --div-soft:#1B2F60;
+    --grape:#B38DFF; --orange:#FFA24D; --lime:#52D985;
+    --sun:#FFD34D; --ok:#4ADE80; --ok-soft:#173A2A; --bad:#FF7A6E; --bad-soft:#45202A;
+    --on-accent:#1A1640; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1A1640; --grid:#241E52; --ink:#F4F1FF; --muted:#B4ACDD; --card:#272058; --line:#110D2E; --lock:#463E7A;
+  --mul:#FF70B1; --mul-deep:#B53A78; --mul-soft:#43204D;
+  --div:#4DB5FF; --div-deep:#1C6FB5; --div-soft:#1B2F60;
+  --grape:#B38DFF; --orange:#FFA24D; --lime:#52D985;
+  --sun:#FFD34D; --ok:#4ADE80; --ok-soft:#173A2A; --bad:#FF7A6E; --bad-soft:#45202A;
+  --on-accent:#1A1640; color-scheme:dark;
+}
+body[data-cat="div"]{--accent:var(--div);--accent-deep:var(--div-deep);--accent-soft:var(--div-soft)}
+
+html{box-sizing:border-box;height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;overflow:hidden;background-color:var(--paper);
+  background-image:radial-gradient(circle at 12% 8%,color-mix(in srgb,var(--sun) 30%,transparent) 0 120px,transparent 121px),radial-gradient(circle at 95% 40%,color-mix(in srgb,var(--mul) 18%,transparent) 0 150px,transparent 151px),radial-gradient(circle at 5% 85%,color-mix(in srgb,var(--grape) 18%,transparent) 0 140px,transparent 141px),linear-gradient(var(--grid) 2px,transparent 2px),linear-gradient(90deg,var(--grid) 2px,transparent 2px);
+  background-size:100% 100%,100% 100%,100% 100%,28px 28px,28px 28px;background-attachment:fixed;color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.4;
+  -webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+button,select{font:inherit;color:inherit;touch-action:manipulation}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:0}
+#app{position:relative;z-index:1;height:100%;max-width:560px;margin:0 auto}
+.screen{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 28px}
+
+/* fondo animado */
+.sky{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.sky span{position:absolute;bottom:-60px;font-family:var(--f-display);opacity:.22;animation:float linear infinite}
+@keyframes float{to{transform:translateY(-120vh) rotate(200deg)}}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:50;pointer-events:none}
+
+/* botones genéricos */
+.iconbtn{width:46px;height:46px;flex:none;border:0;border-radius:14px;background:var(--card);box-shadow:0 4px 0 var(--line);display:grid;place-items:center}
+.iconbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.btn{border:0;border-radius:18px;padding:14px 20px;font-family:var(--f-display);font-size:22px;letter-spacing:.02em;background:var(--accent);color:var(--on-accent);box-shadow:0 5px 0 var(--accent-deep)}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--accent-deep)}
+.btn.ghost{background:var(--card);color:var(--ink);box-shadow:0 5px 0 var(--line)}
+.btn.ghost:active{box-shadow:0 1px 0 var(--line)}
+
+/* inicio */
+.home{display:flex;flex-direction:column;gap:22px}
+.brand{padding-top:18px;display:flex;flex-direction:column;gap:6px}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:clamp(40px,12vw,58px);line-height:.95;letter-spacing:.01em}
+.brand h1{color:var(--grape)} .brand h1 .m{color:var(--mul)} .brand h1 .d{color:var(--div)}
+.brand p{margin:0;color:var(--muted);max-width:36ch;font-size:18px}
+.cats{display:flex;flex-direction:column;gap:16px}
+.cat-card{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:16px;padding:16px;border:4px solid var(--mul-soft);border-radius:28px;background:var(--card);box-shadow:0 6px 0 var(--mul-soft);text-align:left;transition:transform .15s}
+.cat-card:active{transform:translateY(4px);box-shadow:0 2px 0 var(--line)}
+.sym{width:86px;height:86px;border-radius:24px;display:grid;place-items:center;font-family:var(--f-display);font-size:66px;line-height:1;color:var(--on-accent);background:var(--mul);box-shadow:0 6px 0 var(--mul-deep);animation:bob 3.2s ease-in-out infinite}
+.cat-card.div{border-color:var(--div-soft);box-shadow:0 6px 0 var(--div-soft)}
+.cat-card.div .sym{background:var(--div);box-shadow:0 6px 0 var(--div-deep);animation-delay:-1.6s}
+@keyframes bob{50%{transform:translateY(-5px) rotate(-4deg)}}
+.cat-info{min-width:0;display:flex;flex-direction:column;gap:4px}
+.cat-info h2{font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1}
+.cat-info small{color:var(--muted);font-size:15px;line-height:1.25}
+.meter{height:12px;border-radius:99px;background:var(--paper);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,var(--sun),var(--orange));transition:width .6s}
+.stat{font-size:14px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.home-foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.chip{padding:8px 14px;border-radius:99px;background:var(--card);box-shadow:0 3px 0 var(--line);font-size:14px;font-weight:700;color:var(--muted)}
+.howto{margin:0;color:var(--muted);font-size:15px}
+
+/* barra superior */
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding-block:6px 10px;background:linear-gradient(var(--paper) 75%,transparent)}
+.topbar h2{font-family:var(--f-display);font-weight:400;font-size:26px;flex:1;min-width:0;line-height:1.05}
+.topbar .total{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.topbar .total b{color:var(--sun)}
+
+/* mapa */
+.world{margin-top:18px;--accent-deep:color-mix(in srgb,var(--accent) 70%,#000);--accent-soft:color-mix(in srgb,var(--accent) 20%,var(--card))}
+.world-head{display:flex;flex-direction:column;gap:2px;padding:12px 16px;border-radius:18px;background:var(--accent-soft)}
+.world-head span{font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--accent)}
+.world-head h3{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.05}
+.world-head p{margin:0;color:var(--muted);font-size:15px}
+.path{display:flex;flex-direction:column;gap:6px;padding:14px 6% 4px}
+.node-wrap{display:flex;flex-direction:column;align-items:center;width:120px;gap:2px}
+.node-wrap.p0{align-self:flex-start}.node-wrap.p1{align-self:center}.node-wrap.p2{align-self:flex-end}.node-wrap.p3{align-self:center}
+.node{width:76px;height:76px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);box-shadow:0 6px 0 var(--accent-deep);font-family:var(--f-display);font-size:30px;display:grid;place-items:center;position:relative}
+.node:active{transform:translateY(4px);box-shadow:0 2px 0 var(--accent-deep)}
+.node.locked{background:var(--lock);box-shadow:0 6px 0 var(--line);color:var(--card);cursor:not-allowed}
+.node.next::before{content:"";position:absolute;inset:-8px;border-radius:50%;border:4px solid var(--sun);animation:ring 1.4s ease-out infinite}
+@keyframes ring{from{transform:scale(.9);opacity:1}to{transform:scale(1.25);opacity:0}}
+.nname{font-weight:700;font-size:14px;text-align:center;line-height:1.15}
+.stars{display:flex;gap:2px;font-size:17px;line-height:1;color:var(--lock)}
+.stars .on{color:var(--sun)}
+
+/* juego */
+.play{display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.pbar{display:flex;align-items:center;gap:12px}
+.ptitle{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.ptitle b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{height:14px;border-radius:99px;background:var(--card);box-shadow:inset 0 2px 0 var(--line);overflow:hidden}
+.track i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--grape),var(--sun));border-radius:inherit;transition:width .4s}
+.count{font-family:var(--f-display);font-size:20px;font-variant-numeric:tabular-nums}
+.timer{height:8px;border-radius:99px;background:var(--bad-soft);overflow:hidden}
+.timer i{display:block;height:100%;width:100%;background:var(--bad);border-radius:inherit}
+.qzone{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-block:4px}
+.qcard{margin-block:auto;position:relative;background:var(--card);border-radius:28px;padding:18px 18px 18px;border:4px solid var(--accent-soft);box-shadow:0 7px 0 var(--accent-soft);text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.qcard.good{animation:pop .45s}
+.qcard.shake{animation:shake .4s}
+@keyframes pop{40%{transform:scale(1.04)}}
+@keyframes shake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.hintbtn{align-self:flex-end;margin:-10px -6px -4px 0;border:0;border-radius:99px;padding:6px 14px;box-shadow:0 3px 0 color-mix(in srgb,var(--accent) 35%,transparent);background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:14px}
+.op{font-family:var(--f-display);font-size:clamp(46px,15vw,78px);line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:.01em;padding-top:8px}
+.op.long{font-size:clamp(34px,10.5vw,58px)}
+.op.sm{font-size:34px;padding-top:0}
+.op .gap{display:inline-block;min-width:1.1em;color:var(--accent);border-bottom:5px solid var(--accent);line-height:.9}
+.pic{font-size:54px;line-height:1;padding-top:4px}
+.prompt{margin:0;font-size:clamp(19px,5.2vw,23px);font-weight:600;line-height:1.35;max-width:32ch}
+.prompt b{color:var(--accent);font-weight:800;white-space:nowrap}
+.hint{width:100%;background:var(--accent-soft);border-radius:16px;padding:10px 14px;font-size:16px;text-align:left;line-height:1.35}
+.hint p{margin:0 0 8px}
+.dots{display:grid;grid-template-columns:repeat(var(--c),var(--s,18px));gap:6px;justify-content:center;margin-inline:auto}
+.dots i{width:var(--s,18px);height:var(--s,18px);border-radius:50%;background:var(--accent);animation:drop .35s backwards}
+@keyframes drop{from{transform:scale(0)}}
+.groups{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.grp{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:84px;padding:7px;border:2px dashed var(--accent);border-radius:14px}
+.grp i{width:13px;height:13px;border-radius:50%;background:var(--accent)}
+.fb{min-height:1.5em;text-align:center;font-weight:800;font-size:19px}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.explain{background:var(--ok-soft);border-radius:16px;padding:10px 14px;text-align:center;font-size:18px}
+.explain small{display:block;color:var(--muted);font-size:14px;font-weight:600}
+
+.bottom{display:flex;flex-direction:column;gap:10px;padding-bottom:4px}
+.ansrow{display:flex;align-items:flex-end;justify-content:center;gap:10px;flex-wrap:wrap}
+.ansrow .aff{font-family:var(--f-display);font-size:30px;align-self:center;color:var(--muted)}
+.slotbox{display:flex;flex-direction:column;align-items:center;gap:2px}
+.slotbox label{font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.slot{min-width:140px;max-width:100%;height:62px;padding:0 14px;border-radius:16px;border:3px solid var(--line);background:var(--card);font-family:var(--f-display);font-size:38px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.slot.small{min-width:104px}
+.slot.active{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.slot.active::after{content:"";width:3px;height:34px;margin-left:3px;background:var(--accent);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;user-select:none;-webkit-user-select:none}
+.key{height:clamp(46px,7.6vh,62px);border:0;border-radius:14px;background:var(--card);box-shadow:0 4px 0 var(--line);font-family:var(--f-display);font-size:28px}
+.key:active{transform:translateY(3px);box-shadow:0 1px 0 var(--line)}
+.key.fn{font-family:var(--f-body);font-size:18px;font-weight:800;color:var(--muted)}
+.key.ok{grid-column:1/-1;background:var(--accent);color:var(--on-accent);box-shadow:0 5px 0 var(--accent-deep);font-size:24px}
+.key.ok:active{box-shadow:0 1px 0 var(--accent-deep)}
+.key:disabled{visibility:hidden}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.choice{height:clamp(70px,11vh,90px);border:0;border-radius:20px;background:var(--card);box-shadow:0 5px 0 var(--line);font-family:var(--f-display);font-size:clamp(28px,8vw,38px);font-variant-numeric:tabular-nums}
+.choice:active{transform:translateY(4px);box-shadow:0 1px 0 var(--line)}
+.choice.wrong{background:var(--bad-soft);color:var(--bad);box-shadow:none;transform:translateY(4px)}
+.choice.right{background:var(--ok);color:var(--on-accent);box-shadow:0 5px 0 var(--line)}
+.nextbtn{width:100%}
+
+/* resultado */
+.result{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
+.bigstars{display:flex;gap:6px;font-size:76px;line-height:1;color:var(--lock)}
+.bigstars span{display:inline-block}
+.bigstars .on{color:var(--sun);animation:starin .5s backwards}
+.bigstars .on:nth-child(2){animation-delay:.25s}.bigstars .on:nth-child(3){animation-delay:.5s}
+@keyframes starin{from{transform:scale(0) rotate(-90deg)}70%{transform:scale(1.25)}}
+.result h2{font-family:var(--f-display);font-weight:400;font-size:42px;line-height:1}
+.result .lvname{color:var(--muted);font-weight:700;margin:0}
+.rstats{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:360px}
+.rstats div{background:var(--card);border-radius:18px;padding:12px;box-shadow:0 4px 0 var(--line);display:flex;flex-direction:column}
+.rstats b{font-family:var(--f-display);font-size:30px;font-weight:400;font-variant-numeric:tabular-nums}
+.rstats small{color:var(--muted);font-weight:700;font-size:13px}
+.ractions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px}
+
+/* ajustes */
+.set-list{display:flex;flex-direction:column;gap:12px;padding-top:6px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--card);border-radius:18px;padding:12px 14px;box-shadow:0 4px 0 var(--line)}
+.set>div:first-child{min-width:0;display:flex;flex-direction:column}
+.set b{font-size:17px}
+.set small{color:var(--muted);font-size:14px;line-height:1.25}
+.stepper{display:flex;align-items:center;gap:6px;flex:none}
+.stepper button{width:40px;height:40px;border:0;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:24px;font-weight:800;line-height:1}
+.stepper output{min-width:2.2ch;text-align:center;font-family:var(--f-display);font-size:24px;font-variant-numeric:tabular-nums}
+.set select{flex:none;height:44px;border-radius:12px;border:2px solid var(--line);background:var(--paper);padding:0 10px;font-weight:700}
+.toggle{flex:none;width:58px;height:34px;border-radius:99px;border:0;background:var(--lock);position:relative;transition:background .2s}
+.toggle span{position:absolute;top:4px;left:4px;width:26px;height:26px;border-radius:50%;background:var(--card);transition:transform .2s}
+.toggle[aria-checked="true"]{background:var(--ok)}
+.toggle[aria-checked="true"] span{transform:translateX(24px)}
+.set-note{color:var(--muted);font-size:14px;margin:4px 2px}
+.danger{background:var(--bad-soft);color:var(--bad);box-shadow:0 5px 0 var(--line)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .sky{display:none}
+}
+</style>
+
+<div class="sky" id="sky" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<div id="app">
+  <!-- INICIO -->
+  <section id="s-home" class="screen home">
+    <div class="brand">
+      <h1><span class="m">Multiplica</span><br>y <span class="d">Reparte</span></h1>
+      <p>Aprende las tablas, la división y a resolver problemas de la vida real.</p>
+    </div>
+    <div class="cats">
+      <button class="cat-card mul" data-cat="mul" id="card-mul">
+        <span class="sym" aria-hidden="true">×</span>
+        <span class="cat-info"><h2>Multiplicación</h2><small>Grupos iguales, tablas, números grandes y problemas.</small>
+          <span class="meter"><i id="m-mul"></i></span><span class="stat" id="st-mul"></span></span>
+      </button>
+      <button class="cat-card div" data-cat="div" id="card-div">
+        <span class="sym" aria-hidden="true">÷</span>
+        <span class="cat-info"><h2>División</h2><small>Repartir, divisiones de las tablas, números grandes y problemas.</small>
+          <span class="meter"><i id="m-div"></i></span><span class="stat" id="st-div"></span></span>
+      </button>
+    </div>
+    <div class="home-foot">
+      <button class="iconbtn" id="go-settings" aria-label="Ajustes">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.8 1.7 1l.3 2.5h4l.3-2.5c.6-.2 1.2-.6 1.7-1l2.4 1 2-3.4zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+      </button>
+      <button class="chip" id="go-players" style="border:0"></button>
+      <span class="chip" id="cfg-chip"></span>
+    </div>
+    <p class="howto" id="howto"></p>
+  </section>
+
+  <!-- MAPA -->
+  <section id="s-map" class="screen" hidden>
+    <header class="topbar">
+      <button class="iconbtn" data-go="home" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <h2 id="map-title"></h2>
+      <span class="total" id="map-total"></span>
+    </header>
+    <div id="map"></div>
+  </section>
+
+  <!-- JUEGO -->
+  <section id="s-play" class="screen play" hidden>
+    <header class="pbar">
+      <button class="iconbtn" id="p-back" aria-label="Salir del nivel"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></button>
+      <div class="ptitle"><b id="p-name"></b><div class="track"><i id="p-fill"></i></div></div>
+      <span class="count" id="p-count"></span>
+    </header>
+    <div class="timer" id="p-timer" hidden><i id="p-tfill"></i></div>
+    <div class="qzone">
+      <div class="qcard" id="qcard">
+        <button class="hintbtn" id="b-hint">Pista</button>
+        <div id="q-body"></div>
+        <div class="hint" id="q-hint" hidden></div>
+      </div>
+      <div class="fb" id="fb" aria-live="polite"></div>
+      <div class="explain" id="explain" hidden></div>
+    </div>
+    <div class="bottom">
+      <div class="ansrow" id="ansrow"></div>
+      <div class="pad" id="pad">
+        <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
+        <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+        <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+        <button class="key" data-k="," id="k-comma">,</button><button class="key" data-k="0">0</button><button class="key fn" data-k="del" aria-label="Borrar">Borrar</button>
+        <button class="key ok" data-k="ok">Comprobar</button>
+      </div>
+      <div class="choices" id="choices" hidden></div>
+      <button class="btn nextbtn" id="b-next" hidden>Siguiente</button>
+    </div>
+  </section>
+
+  <!-- RESULTADO -->
+  <section id="s-result" class="screen result" hidden>
+    <div class="bigstars" id="r-stars"></div>
+    <h2 id="r-title"></h2>
+    <p class="lvname" id="r-level"></p>
+    <div class="rstats">
+      <div><b id="r-ok"></b><small>a la primera</small></div>
+      <div><b id="r-time"></b><small>tiempo</small></div>
+    </div>
+    <div class="ractions">
+      <button class="btn" id="r-next">Siguiente nivel</button>
+      <button class="btn ghost" id="r-again">Repetir nivel</button>
+      <button class="btn ghost" id="r-map">Ver niveles</button>
+    </div>
+  </section>
+
+  <!-- JUGADORES Y COPIA -->
+  <section id="s-players" class="screen" hidden>
+    <header class="topbar">
+      <button class="iconbtn" data-go="home" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <h2>Jugadores</h2>
+    </header>
+    <div class="set-list">
+      <div id="pl-list" class="set-list"></div>
+      <div class="set"><div><b>Nuevo jugador</b><small>Cada uno guarda sus propias estrellas y ajustes.</small></div>
+        <button class="iconbtn" id="pl-add" aria-label="Agregar jugador">+</button></div>
+      <div class="set" style="flex-direction:column;align-items:stretch"><div><b>Estadísticas de <span id="pl-name"></span></b><small id="pl-stats"></small></div></div>
+      <div class="set" style="flex-direction:column;align-items:stretch;gap:10px"><div><b>Copia de seguridad</b><small>Copia el código y guárdalo (por ejemplo en un mensaje o nota). Para recuperar los avances, pégalo aquí y toca Restaurar.</small></div>
+        <textarea id="bk-text" rows="4" spellcheck="false" aria-label="Código de copia de seguridad" style="width:100%;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);padding:8px;font:12px monospace"></textarea>
+        <div style="display:flex;gap:10px"><button class="btn ghost" id="bk-copy" style="flex:1;font-size:18px;padding:10px">Copiar</button><button class="btn" id="bk-restore" style="flex:1;font-size:18px;padding:10px">Restaurar</button></div>
+        <small id="bk-msg" aria-live="polite" style="min-height:1.2em"></small></div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="s-settings" class="screen" hidden>
+    <header class="topbar">
+      <button class="iconbtn" data-go="home" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <h2>Ajustes</h2>
+    </header>
+    <div class="set-list">
+      <div class="set"><div><b>Tablas hasta el</b><small>Número más grande de las tablas y de las divisiones básicas.</small></div>
+        <div class="stepper"><button id="st-t-" data-step="maxTable" data-d="-1" aria-label="Menos">−</button><output id="v-maxTable"></output><button id="st-t+" data-step="maxTable" data-d="1" aria-label="Más">+</button></div></div>
+      <div class="set"><div><b>Números hasta</b><small>Resultado más grande en los niveles de números grandes y problemas.</small></div>
+        <select id="maxNum" aria-label="Números hasta">
+          <option value="100">100</option><option value="500">500</option><option value="1000">1.000</option><option value="5000">5.000</option>
+          <option value="10000">10.000</option><option value="100000">100.000</option><option value="1000000">1.000.000</option>
+        </select></div>
+      <div class="set"><div><b>Ejercicios por nivel</b><small>El gran desafío final suma 4 más.</small></div>
+        <div class="stepper"><button id="st-p-" data-step="perLevel" data-d="-1" aria-label="Menos">−</button><output id="v-perLevel"></output><button id="st-p+" data-step="perLevel" data-d="1" aria-label="Más">+</button></div></div>
+      <div class="set"><div><b id="lb-rem">Divisiones con resto</b><small>Agrega niveles donde sobra algo, por ejemplo 17 ÷ 5 = 3 y sobran 2.</small></div>
+        <button class="toggle" role="switch" id="tg-remainders" data-key="remainders" aria-labelledby="lb-rem"><span></span></button></div>
+      <div class="set"><div><b id="lb-dec">Números decimales</b><small>Agrega niveles con decimales, por ejemplo 2,5 × 4 o 7 ÷ 2.</small></div>
+        <button class="toggle" role="switch" id="tg-decimals" data-key="decimals" aria-labelledby="lb-dec"><span></span></button></div>
+      <div class="set"><div><b id="lb-tim">Contrarreloj en todos los niveles</b><small>20 segundos por ejercicio.</small></div>
+        <button class="toggle" role="switch" id="tg-timer" data-key="timer" aria-labelledby="lb-tim"><span></span></button></div>
+      <div class="set"><div><b id="lb-snd">Sonidos</b><small>Efectos al responder.</small></div>
+        <button class="toggle" role="switch" id="tg-sound" data-key="sound" aria-labelledby="lb-snd"><span></span></button></div>
+      <div class="set"><div><b id="lb-unl">Desbloquear todos los niveles</b><small>Para que un adulto elija dónde empezar.</small></div>
+        <button class="toggle" role="switch" id="tg-unlockAll" data-key="unlockAll" aria-labelledby="lb-unl"><span></span></button></div>
+      <p class="set-note">Por defecto solo aparecen números naturales enteros. Al cambiar los límites, los niveles se ajustan y las estrellas ganadas se conservan.</p>
+      <button class="btn danger" id="b-reset">Borrar progreso</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const rnd=(a,b)=>{a=Math.ceil(a);b=Math.floor(b);if(b<a)b=a;return Math.floor(Math.random()*(b-a+1))+a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const min=Math.min,max=Math.max,fl=Math.floor;
+function fmt(n){const neg=n<0;n=Math.abs(n);let [i,d]=String(Math.round(n*100)/100).split('.');i=i.replace(/\B(?=(\d{3})+(?!\d))/g,'.');return (neg?'−':'')+i+(d?','+d:'')}
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const DEF={maxTable:10,maxNum:100,perLevel:8,remainders:false,decimals:false,timer:false,sound:true,unlockAll:false};
+/* ---------- jugadores y guardado ---------- */
+const AVATARS=['🦊','🐼','🦁','🐸','🐙','🦄','🐯','🐵'];
+const ydayStr=()=>{const y=new Date();y.setDate(y.getDate()-1);return y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0')};
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const newPlayer=(name,i,old)=>({id:'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4),name,avatar:AVATARS[i%AVATARS.length],
+  cfg:Object.assign({},DEF,old&&old.cfg),prog:(old&&old.prog)||{},stats:{},streak:{last:'',days:0,best:0}});
+let db=store.get('myr-db',null);
+if(!db||!db.players||!Object.keys(db.players).length){
+  /* migra el guardado antiguo (una sola partida) al primer jugador */
+  const p0=newPlayer('Jugador 1',0,{cfg:store.get('myr-cfg',{}),prog:store.get('myr-prog',{})});
+  db={v:2,active:p0.id,players:{[p0.id]:p0}};store.set('myr-db',db);
+}
+if(!db.players[db.active])db.active=Object.keys(db.players)[0];
+let P=db.players[db.active],cfg=P.cfg,prog=P.prog;
+const saveDb=()=>store.set('myr-db',db);
+const saveCfg=saveDb, saveProg=saveDb;
+function setActive(id){db.active=id;P=db.players[id];cfg=P.cfg;prog=P.prog;saveDb()}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+
+/* ---------- visuales ---------- */
+function dots(r,c){const s=r*c>40?12:r*c>24?15:18;let h='';for(let i=0;i<r*c;i++)h+=`<i style="animation-delay:${i*12}ms"></i>`;return `<div class="dots" style="--c:${c};--s:${s}px">${h}</div>`}
+function groups(k,q){let h='';for(let g=0;g<k;g++){h+='<div class="grp">'+'<i></i>'.repeat(q)+'</div>'}return `<div class="groups">${h}</div>`}
+const seq=(b,n)=>Array.from({length:n},(_,i)=>fmt(b*(i+1))).join(', ');
+function splitPlace(n){const s=String(n),o=[];for(let i=0;i<s.length;i++){const d=+s[i];if(d)o.push(d*10**(s.length-1-i))}return o}
+const opCls=t=>t.replace(/<[^>]+>/g,'').length>11?'op long':'op';
+
+/* ---------- preguntas base ---------- */
+function hintMul(a,b){
+  if(a===0||b===0)return 'Cualquier número multiplicado por 0 da 0.';
+  if(a===1||b===1)return 'Multiplicar por 1 deja el número igual.';
+  if(a===10||b===10)return 'Para multiplicar por 10, agrega un 0 al final del otro número.';
+  if([100,1000,10000].includes(a)||[100,1000,10000].includes(b))return 'Multiplicar por 100 agrega dos ceros; por 1.000, tres ceros.';
+  if(a<=10&&b<=10)return `<p>Son <b>${a}</b> grupos de <b>${b}</b>. Cuenta de ${b} en ${b}: ${seq(b,a-1)}, …</p>${dots(a,b)}`;
+  const [big,sm]=a>=b?[a,b]:[b,a];
+  if(sm<10){const p=splitPlace(big);return `Separa ${fmt(big)} en ${p.map(fmt).join(' + ')}. Multiplica cada parte por ${sm} (${p.map(x=>fmt(x)+' × '+sm).join(', ')}) y suma los resultados.`}
+  const t=fl(sm/10)*10,u=sm%10;
+  return u?`Separa ${sm} en ${t} + ${u}. Calcula ${fmt(big)} × ${t} y ${fmt(big)} × ${u}, y luego suma.`:`Calcula ${fmt(big)} × ${t/10} y agrega un 0 al final.`;
+}
+function qMul(a,b){const p=a*b,t=`${fmt(a)} × ${fmt(b)}`;return {type:'mul',kind:'num',a,b,answer:p,text:`<div class="${opCls(t)}">${t}</div>`,explain:`${t} = <b>${fmt(p)}</b>`,hint:hintMul(a,b)}}
+function hintDiv(n,k){
+  if(n===0)return 'Si no hay nada que repartir, a cada uno le toca 0.';
+  if(k===1)return 'Dividir por 1 deja el número igual.';
+  if(n===k)return 'Un número dividido por sí mismo siempre da 1.';
+  const q=n/k;
+  if(n<=40&&k<=10)return `<p>Reparte ${n} en ${k} grupos iguales y cuenta cuántos quedan en un grupo:</p>${groups(k,q)}`;
+  if(q<=max(10,cfg.maxTable))return `Piensa en la tabla del ${k}: ¿qué número multiplicado por ${k} da ${fmt(n)}?`;
+  let p=10**(String(fl(q)).length-1),t=fl(q/p)*p;
+  while(t===q&&p>=10){p/=10;t=fl(q/p)*p-p*(q%(p*10)===0?1:0)}
+  if(t<=0||t>=q)return `Prueba multiplicando: ${k} × 10 = ${fmt(k*10)}, ${k} × 100 = ${fmt(k*100)}. ¿Cuántas veces cabe ${k} en ${fmt(n)}?`;
+  return `Pista: ${fmt(k)} × ${fmt(t)} = ${fmt(k*t)}. Te faltan ${fmt(n-k*t)}. ¿Cuántas veces cabe ${fmt(k)} en ${fmt(n-k*t)}?`;
+}
+function qDiv(n,k){const q=n/k,t=`${fmt(n)} ÷ ${fmt(k)}`;return {type:'div',kind:'num',n,k,answer:q,text:`<div class="${opCls(t)}">${t}</div>`,explain:`${t} = <b>${fmt(q)}</b><small>porque ${fmt(k)} × ${fmt(q)} = ${fmt(n)}</small>`,hint:hintDiv(n,k)}}
+function qRem(n,k){const q=fl(n/k),r=n%k,t=`${fmt(n)} ÷ ${fmt(k)}`;return {type:'div',kind:'qr',answer:q,answer2:r,text:`<div class="${opCls(t)}">${t}</div>`,explain:`${t} = <b>${fmt(q)}</b> y sobran <b>${fmt(r)}</b><small>porque ${fmt(k)} × ${fmt(q)} + ${fmt(r)} = ${fmt(n)}</small>`,hint:`Busca el número más grande de la tabla del ${k} que no pase de ${fmt(n)}. Lo que falta para llegar a ${fmt(n)} es lo que sobra.`}}
+function prob(o,type){return {type,kind:o.kind||'num',answer:o.ans,answer2:o.ans2,a:o.a,b:o.b,pre:o.pre,unit:o.u,
+  text:`<div class="pic" aria-hidden="true">${o.e}</div><p class="prompt">${o.t}</p>`,explain:o.ex,hint:o.hint}}
+
+/* ---------- problemas de multiplicación ---------- */
+const MB=[
+ {f:(a,b)=>['📦',`En cada caja hay <b>${b}</b> lápices. ¿Cuántos lápices hay en <b>${a}</b> cajas?`]},
+ {f:(a,b)=>['🌱',`Un huerto tiene <b>${a}</b> filas con <b>${b}</b> lechugas cada una. ¿Cuántas lechugas hay en total?`]},
+ {f:(a,b)=>['📖',`Sofía lee <b>${b}</b> páginas cada día. ¿Cuántas páginas lee en <b>${a}</b> días?`]},
+ {f:(a,b)=>['🚌',`Cada bus lleva <b>${b}</b> pasajeros. ¿Cuántos pasajeros van en <b>${a}</b> buses llenos?`]},
+ {f:(a,b)=>['🎈',`Para un cumpleaños se arman <b>${a}</b> ramos de <b>${b}</b> globos. ¿Cuántos globos se usan?`]},
+ {f:(a,b)=>['🍪',`Matías hornea <b>${a}</b> bandejas con <b>${b}</b> galletas cada una. ¿Cuántas galletas hornea?`]},
+ {f:(a,b)=>['🏫',`En el colegio hay <b>${a}</b> cursos con <b>${b}</b> alumnos cada uno. ¿Cuántos alumnos hay?`]},
+ {f:(a,b)=>['🌸',`Un jardín tiene <b>${a}</b> maceteros y en cada uno crecen <b>${b}</b> flores. ¿Cuántas flores hay?`]},
+ {f:(a,b)=>['🃏',`Tomás tiene <b>${a}</b> sobres con <b>${b}</b> láminas cada uno. ¿Cuántas láminas tiene?`]},
+ {fix:8,f:a=>['🕷️',`Una araña tiene <b>8</b> patas. ¿Cuántas patas tienen <b>${a}</b> arañas?`]},
+ {fix:7,f:a=>['📅',`Una semana tiene <b>7</b> días. ¿Cuántos días hay en <b>${a}</b> semanas?`]},
+ {fix:4,f:a=>['🚗',`Cada auto tiene <b>4</b> ruedas. ¿Cuántas ruedas hay en <b>${a}</b> autos?`]},
+ {fix:5,f:a=>['🖐️',`Cada mano tiene <b>5</b> dedos. ¿Cuántos dedos hay en <b>${a}</b> manos?`]},
+];
+function pMul(aR,bR){
+  const ok=MB.filter(m=>!m.fix||(m.fix>=bR[0]&&m.fix<=bR[1]));const m=pick(ok);
+  const a=rnd(...aR),b=m.fix||rnd(...bR);const [e,t]=m.f(fmt(a),fmt(b));
+  return prob({e,t,ans:a*b,a,b,ex:`${fmt(a)} × ${fmt(b)} = <b>${fmt(a*b)}</b>`,hint:`Se juntan grupos iguales, así que se multiplica: ¿cuánto es ${fmt(a)} × ${fmt(b)}?`},'mul');
+}
+function pMulMeasure(aR,bR,M){
+  const a=rnd(...aR),b=rnd(...bR),T=rnd(0,3);let o;
+  if(T===0){const sc=[100,10,1].find(s=>a*b*s<=M)||1,p=b*sc;o={e:'📓',t:`Un cuaderno cuesta <b>$${fmt(p)}</b>. ¿Cuánto pagas por <b>${a}</b> cuadernos?`,ans:a*p,pre:'$',B:p}}
+  else if(T===1){o={e:'🟩',t:`Un terreno rectangular mide <b>${fmt(b)} m</b> de largo y <b>${a} m</b> de ancho. ¿Cuál es su área?`,ans:a*b,u:'m²',B:b}}
+  else if(T===2){o={e:'🚆',t:`Un tren avanza <b>${fmt(b)} km</b> cada hora. ¿Cuántos kilómetros recorre en <b>${a}</b> horas?`,ans:a*b,u:'km',B:b}}
+  else {const sc=[100,10,1].find(s=>a*b*s<=M)||1,p=b*sc;o={e:'🎟️',t:`Una entrada al cine cuesta <b>$${fmt(p)}</b>. ¿Cuánto pagan <b>${a}</b> amigos en total?`,ans:a*p,pre:'$',B:p}}
+  o.a=a;o.b=o.B;o.ex=`${fmt(a)} × ${fmt(o.B)} = <b>${fmt(o.ans)}</b>`;
+  o.hint=T===1?'El área de un rectángulo es largo × ancho.':`Es la misma cantidad repetida ${a} veces: multiplica ${fmt(a)} × ${fmt(o.B)}.`;
+  return prob(o,'mul');
+}
+function pMul2(aR,bR,M){
+  const T=rnd(0,4),a=rnd(...aR),b=rnd(...bR),P=a*b;
+  if(T===0){const c=rnd(2,9);return prob({e:'🍪',t:`Compras <b>${a}</b> paquetes con <b>${fmt(b)}</b> galletas cada uno y tu abuela te regala <b>${c}</b> galletas más. ¿Cuántas galletas tienes en total?`,ans:P+c,ex:`${a} × ${fmt(b)} = ${fmt(P)}; luego ${fmt(P)} + ${c} = <b>${fmt(P+c)}</b>`,hint:'Primero multiplica para saber cuántas galletas traen los paquetes. Después suma el regalo.'},'mul')}
+  if(T===1){const sc=[100,10,1].find(s=>(P+9)*s<=M)||1,p=b*sc,tot=a*p,m=tot+rnd(1,9)*sc;return prob({e:'💰',t:`Tienes <b>$${fmt(m)}</b> y compras <b>${a}</b> cuadernos de <b>$${fmt(p)}</b> cada uno. ¿Cuánto dinero te queda?`,ans:m-tot,pre:'$',ex:`${a} × ${fmt(p)} = ${fmt(tot)}; luego ${fmt(m)} − ${fmt(tot)} = <b>${fmt(m-tot)}</b>`,hint:'Primero multiplica para saber cuánto gastas. Después réstalo de lo que tenías.'},'mul')}
+  if(T===2){const c=rnd(1,P-1);return prob({e:'🎭',t:`Un teatro tiene <b>${a}</b> filas de <b>${fmt(b)}</b> asientos. Ya se sentaron <b>${fmt(c)}</b> personas. ¿Cuántos asientos quedan libres?`,ans:P-c,ex:`${a} × ${fmt(b)} = ${fmt(P)}; luego ${fmt(P)} − ${fmt(c)} = <b>${fmt(P-c)}</b>`,hint:'Primero multiplica para saber cuántos asientos hay. Después resta los ocupados.'},'mul')}
+  if(T===3){const c=rnd(1,max(1,b-1));return prob({e:'🚚',t:`Un camión lleva <b>${a}</b> cajas con <b>${fmt(b)}</b> botellas cada una. En el viaje se rompen <b>${c}</b> botellas. ¿Cuántas botellas llegan sanas?`,ans:P-c,ex:`${a} × ${fmt(b)} = ${fmt(P)}; luego ${fmt(P)} − ${c} = <b>${fmt(P-c)}</b>`,hint:'Primero multiplica para saber cuántas botellas había. Después resta las rotas.'},'mul')}
+  const c=rnd(2,6),R=(a+c)*b;return prob({e:'✏️',t:`Pedro tiene <b>${a}</b> cajas de <b>${fmt(b)}</b> lápices y Ana tiene <b>${c}</b> cajas iguales. ¿Cuántos lápices tienen entre los dos?`,ans:R,ex:`${a} + ${c} = ${a+c} cajas; luego ${a+c} × ${fmt(b)} = <b>${fmt(R)}</b>`,hint:'Puedes sumar primero las cajas y después multiplicar por los lápices de cada caja.'},'mul');
+}
+
+/* ---------- problemas de división ---------- */
+const DB=[
+ {f:(n,k)=>['🍬',`Reparte <b>${n}</b> dulces entre <b>${k}</b> niños en partes iguales. ¿Cuántos dulces recibe cada uno?`]},
+ {f:(n,k)=>['👫',`En el curso hay <b>${n}</b> alumnos y se forman equipos de <b>${k}</b>. ¿Cuántos equipos se forman?`]},
+ {f:(n,k)=>['🎀',`Una cinta de <b>${n} cm</b> se corta en <b>${k}</b> trozos iguales. ¿Cuánto mide cada trozo?`,'cm']},
+ {money:1,f:(n,k)=>['🍦',`<b>${k}</b> helados iguales cuestan <b>$${n}</b> en total. ¿Cuánto cuesta un helado?`,'','$']},
+ {f:(n,k)=>['📚',`Un libro tiene <b>${n}</b> páginas. Si lees <b>${k}</b> páginas al día, ¿en cuántos días lo terminas?`]},
+ {f:(n,k)=>['🥚',`Se guardan <b>${n}</b> huevos en cajas de <b>${k}</b>. ¿Cuántas cajas se llenan?`]},
+ {f:(n,k)=>['🌻',`Se plantan <b>${n}</b> flores en <b>${k}</b> maceteros con la misma cantidad. ¿Cuántas flores van en cada macetero?`]},
+ {money:1,f:(n,k)=>['🎁',`Una abuela reparte <b>$${n}</b> entre sus <b>${k}</b> nietos en partes iguales. ¿Cuánto recibe cada nieto?`,'','$']},
+ {fix:7,f:n=>['📅',`¿Cuántas semanas completas son <b>${n}</b> días?`]},
+ {fix:8,f:n=>['🕷️',`En un frasco se cuentan <b>${n}</b> patas de araña. Cada araña tiene 8 patas. ¿Cuántas arañas hay?`]},
+ {fix:4,f:n=>['🚗',`En un estacionamiento se cuentan <b>${n}</b> ruedas. Cada auto tiene 4. ¿Cuántos autos hay?`]},
+];
+function pDiv(kR,qR){
+  const M=cfg.maxNum,ok=DB.filter(m=>!m.fix||(m.fix>=kR[0]&&m.fix<=kR[1]));const m=pick(ok);
+  const k=m.fix||rnd(...kR);let q=rnd(...qR),n=k*q;
+  if(m.money){const sc=[100,10,1].find(s=>n*s<=M)||1;n*=sc;q*=sc}
+  const [e,t,u,pre]=m.f(fmt(n),fmt(k));
+  return prob({e,t,u,pre,ans:q,ex:`${fmt(n)} ÷ ${fmt(k)} = <b>${fmt(q)}</b>`,hint:`Se reparte en partes iguales (o se arman grupos iguales), así que se divide: ¿cuánto es ${fmt(n)} ÷ ${fmt(k)}?`},'div');
+}
+const DCF=[
+ {c:1,f:(n,k)=>['🚐',`Van <b>${n}</b> personas de paseo y en cada furgón caben <b>${k}</b>. ¿Cuántos furgones se necesitan como mínimo?`]},
+ {c:0,f:(n,k)=>['🥚',`Tienes <b>${n}</b> huevos y cajas de <b>${k}</b>. ¿Cuántas cajas puedes llenar completas?`]},
+ {c:1,f:(n,k)=>['🪑',`A una fiesta vienen <b>${n}</b> invitados y en cada mesa se sientan <b>${k}</b>. ¿Cuántas mesas se necesitan para que todos se sienten?`]},
+ {c:0,money:1,f:(n,k)=>['🍭',`Tienes <b>$${n}</b> y cada chupete cuesta <b>$${k}</b>. ¿Cuántos chupetes puedes comprar como máximo?`]},
+ {c:0,f:(n,k)=>['🧶',`Con <b>${n} cm</b> de lana se hacen pulseras de <b>${k} cm</b>. ¿Cuántas pulseras completas salen?`]},
+ {c:1,f:(n,k)=>['📦',`Hay que guardar <b>${n}</b> libros en cajas donde caben <b>${k}</b>. ¿Cuántas cajas se necesitan para guardarlos todos?`]},
+];
+function pDivCF(kR,qR){
+  const M=cfg.maxNum,m=pick(DCF),k=rnd(...kR),q=rnd(...qR),r=rnd(1,k-1);let n=k*q+r,kk=k;
+  if(m.money){const sc=[100,10,1].find(s=>n*s<=M)||1;n*=sc;kk*=sc}
+  const [e,t]=m.f(fmt(n),fmt(kk));const ans=m.c?q+1:q;
+  const ex=`${fmt(n)} ÷ ${fmt(kk)} = ${q} y sobran ${fmt(n-q*kk)}. `+(m.c?`Lo que sobra necesita uno más: <b>${q+1}</b>`:`Lo que sobra no alcanza para otro: <b>${q}</b>`);
+  return prob({e,t,ans,ex,hint:'Divide y fíjate en lo que sobra. ¿Lo que sobra necesita uno más, o no alcanza para otro completo?'},'div');
+}
+function pDiv2(kR,qR,M){
+  let T=rnd(0,3);const k=rnd(...kR),q=rnd(...qR);
+  if(T===0){const tot=k*q,ds=[];for(let a=2;a<=9;a++)if(tot%a===0&&tot/a>=2)ds.push(a);
+    if(ds.length){const a=pick(ds),b=tot/a;return prob({e:'🛍️',t:`Mamá compra <b>${a}</b> bolsas con <b>${fmt(b)}</b> dulces cada una y los reparte en partes iguales entre <b>${k}</b> niños. ¿Cuántos dulces recibe cada niño?`,ans:q,ex:`${a} × ${fmt(b)} = ${fmt(tot)}; luego ${fmt(tot)} ÷ ${k} = <b>${fmt(q)}</b>`,hint:'Primero multiplica para saber cuántos dulces hay en total. Después divide para repartirlos.'},'div')}
+    T=1}
+  if(T===1){const sc=[100,10,1].find(s=>(k*q+9)*s<=M)||1,p=q*sc,v=rnd(1,9)*sc,X=k*p+v;return prob({e:'🍦',t:`Tenías <b>$${fmt(X)}</b>. Compraste <b>${k}</b> helados del mismo precio y te quedaron <b>$${fmt(v)}</b>. ¿Cuánto costó cada helado?`,ans:p,pre:'$',ex:`${fmt(X)} − ${fmt(v)} = ${fmt(k*p)}; luego ${fmt(k*p)} ÷ ${k} = <b>${fmt(p)}</b>`,hint:'Primero resta para saber cuánto gastaste. Después divide ese gasto por la cantidad de helados.'},'div')}
+  if(T===2&&q>=2){const r=rnd(1,q-1),n=k*q;return prob({e:'📚',t:`Se ordenan <b>${fmt(n)}</b> libros en <b>${k}</b> repisas con la misma cantidad. Luego se sacan <b>${r}</b> libros de cada repisa. ¿Cuántos libros quedan en cada repisa?`,ans:q-r,ex:`${fmt(n)} ÷ ${k} = ${q}; luego ${q} − ${r} = <b>${q-r}</b>`,hint:'Primero divide para saber cuántos libros hay en cada repisa. Después resta los que se sacan.'},'div')}
+  const c=rnd(1,5),n=k*q;return prob({e:'🏃',t:`En una plaza hay <b>${fmt(n)}</b> niños y se forman equipos de <b>${k}</b>. Después llegan otros <b>${c}</b> equipos completos. ¿Cuántos equipos hay ahora?`,ans:q+c,ex:`${fmt(n)} ÷ ${k} = ${q}; luego ${q} + ${c} = <b>${q+c}</b>`,hint:'Primero divide para saber cuántos equipos se formaron. Después suma los que llegaron.'},'div');
+}
+function pRem(kR,qR){
+  const k=rnd(...kR),q=rnd(...qR),r=rnd(1,k-1),n=k*q+r,T=rnd(0,1);
+  const t=T?`Se arman bolsas de <b>${k}</b> dulces con <b>${fmt(n)}</b> dulces. ¿Cuántas bolsas completas salen y cuántos dulces sobran?`:`Reparte <b>${fmt(n)}</b> láminas entre <b>${k}</b> amigos por igual. ¿Cuántas recibe cada uno y cuántas sobran?`;
+  return prob({e:T?'🍬':'🃏',t,kind:'qr',ans:q,ans2:r,ex:`${fmt(n)} ÷ ${k} = <b>${fmt(q)}</b> y sobran <b>${r}</b>`,hint:`Busca el número más grande de la tabla del ${k} que no pase de ${fmt(n)}.`},'div');
+}
+function pWhich(T){return Math.random()<.5?pMul([2,T],[2,T]):pDiv([2,T],[2,T])}
+
+/* ---------- decimales ---------- */
+const r2=x=>Math.round(x*100)/100;
+function qMulDec(T){let x;do{x=rnd(1,T*10-1)}while(x%10===0);const a=x/10,b=rnd(2,9),p=r2(a*b),t=`${fmt(a)} × ${b}`;
+  return {type:'mul',kind:'dec',answer:p,text:`<div class="op">${t}</div>`,explain:`${t} = <b>${fmt(p)}</b>`,hint:`Calcula ${x} × ${b} = ${fmt(x*b)} sin la coma. Como ${fmt(a)} tiene un decimal, el resultado también: ${fmt(x*b)} ÷ 10.`}}
+function pMulDec(T){let x;do{x=rnd(5,T*10)}while(x%10===0);const a=x/10,b=rnd(2,9),p=r2(a*b),R=rnd(0,2);
+  const o=[['🧃',`Una botella tiene <b>${fmt(a)}</b> litros de jugo. ¿Cuántos litros hay en <b>${b}</b> botellas?`,'L'],['🏃',`Una vuelta a la pista mide <b>${fmt(a)} km</b>. ¿Cuántos kilómetros recorres en <b>${b}</b> vueltas?`,'km'],['🌾',`Un paquete de harina pesa <b>${fmt(a)} kg</b>. ¿Cuánto pesan <b>${b}</b> paquetes?`,'kg']][R];
+  return prob({e:o[0],t:o[1],u:o[2],kind:'dec',ans:p,ex:`${fmt(a)} × ${b} = <b>${fmt(p)}</b>`,hint:`Multiplica sin la coma (${x} × ${b} = ${x*b}) y luego pon un decimal: divide por 10.`},'mul')}
+function qDivDec(T){const k=pick([2,4,5,10]);let n;do{n=rnd(1,T*k)}while(n%k===0);const q=r2(n/k),t=`${fmt(n)} ÷ ${k}`;
+  return {type:'div',kind:'dec',answer:q,text:`<div class="op">${t}</div>`,explain:`${t} = <b>${fmt(q)}</b>`,hint:`${fmt(n)} ÷ ${k} = ${fl(n/k)} y sobran ${n%k}. Lo que sobra también se reparte: ${n%k} ÷ ${k} = ${fmt(r2((n%k)/k))}.`}}
+function pDivDec(T){const k=pick([2,4,5,10]);let n;do{n=rnd(k+1,T*k)}while(n%k===0);const q=r2(n/k),R=rnd(0,2);
+  const o=[['🎀',`Una cinta de <b>${n} m</b> se corta en <b>${k}</b> trozos iguales. ¿Cuántos metros mide cada trozo?`,'m'],['🧃',`<b>${n}</b> litros de jugo se reparten en <b>${k}</b> jarras iguales. ¿Cuántos litros van en cada jarra?`,'L'],['🧱',`Una barra de <b>${n} kg</b> de greda se divide en <b>${k}</b> partes iguales. ¿Cuánto pesa cada parte?`,'kg']][R];
+  return prob({e:o[0],t:o[1],u:o[2],kind:'dec',ans:q,ex:`${n} ÷ ${k} = <b>${fmt(q)}</b>`,hint:`Divide ${n} ÷ ${k}. Si sobra algo, sigue repartiendo con decimales.`},'div')}
+
+/* ---------- niveles ---------- */
+function buildMul(){
+  const T=cfg.maxTable,M=cfg.maxNum,S=min(T,5),L=[];
+  const W=(name,desc)=>L.push({world:true,name,desc});
+  const add=(id,name,gen,o={})=>L.push(Object.assign({id:'m-'+id,name,gen},o));
+  W('Primeros pasos','Multiplicar es juntar grupos iguales.');
+  add('grupos','Grupos iguales',()=>{const a=rnd(2,S),b=rnd(1,S),q=qMul(a,b);q.text=`<p class="prompt">¿Cuántos puntos hay en <b>${a}</b> filas de <b>${b}</b>?</p>${dots(a,b)}<div class="op sm">${a} × ${b} = ?</div>`;q.hint=`Cuenta de ${b} en ${b}: ${seq(b,a-1)}${a>1?', …':''}`;return q},{mode:'choice'});
+  add('cero','× 0, × 1 y × 10',()=>{const s=pick([0,1,10]),a=rnd(2,T);return Math.random()<.5?qMul(a,s):qMul(s,a)},{mode:'mix'});
+  W('Las tablas',`De la tabla del 2 a la del ${T}.`);
+  for(let k=2;k<=T;k++)add('t'+k,'Tabla del '+k,()=>{const b=rnd(1,T);return Math.random()<.7?qMul(k,b):qMul(b,k)},{mode:'mix'});
+  W('Mezclas','Las tablas revueltas, el factor perdido y la carrera contra el reloj.');
+  add('mixA',`Mezcla del 2 al ${min(5,T)}`,()=>qMul(rnd(2,min(5,T)),rnd(1,T)));
+  if(T>5)add('mixB',`Mezcla del 6 al ${T}`,()=>qMul(rnd(6,T),rnd(1,T)));
+  add('mixC','Todas las tablas',()=>qMul(rnd(2,T),rnd(2,T)));
+  add('falta','Factor perdido',()=>{const a=rnd(2,T),b=rnd(2,T),p=a*b,left=Math.random()<.5;
+    const t=left?`<span class="gap">?</span> × ${a} = ${fmt(p)}`:`${a} × <span class="gap">?</span> = ${fmt(p)}`;
+    return {type:'mul',kind:'num',a,b,answer:b,text:`<div class="${opCls(t)}">${t}</div>`,explain:`${a} × ${b} = ${fmt(p)}, el número perdido es <b>${b}</b>`,hint:`Recorre la tabla del ${a} hasta llegar a ${fmt(p)}. También puedes dividir: ${fmt(p)} ÷ ${a}.`}});
+  add('rapido','Contrarreloj',()=>qMul(rnd(2,T),rnd(2,T)),{timer:10});
+  const big=[],mx=[10,100,1000,10000].filter(m=>m*2<=M);
+  if(mx.length)big.push(['x10','× 10, × 100 y × 1.000',()=>{const m=pick(mx),a=rnd(2,min(99,fl(M/m)));return Math.random()<.5?qMul(a,m):qMul(m,a)}]);
+  if(M>=22)big.push(['2x1','2 cifras × 1 cifra',()=>{const a=rnd(11,min(99,fl(M/2)));return qMul(a,rnd(2,min(9,fl(M/a))))}]);
+  if(M>=200)big.push(['3x1','3 cifras × 1 cifra',()=>{const a=rnd(100,min(999,fl(M/2)));return qMul(a,rnd(2,min(9,fl(M/a))))}]);
+  if(M>=500)big.push(['2x2','2 cifras × 2 cifras',()=>{const a=rnd(11,min(99,fl(M/11)));return qMul(a,rnd(11,min(99,fl(M/a))))}]);
+  if(M>=10000)big.push(['4x1','4 cifras × 1 cifra',()=>{const a=rnd(1000,min(9999,fl(M/2)));return qMul(a,rnd(2,min(9,fl(M/a))))}]);
+  if(M>=100000)big.push(['3x2','3 cifras × 2 cifras',()=>{const a=rnd(100,min(999,fl(M/11)));return qMul(a,rnd(11,min(99,fl(M/a))))}]);
+  if(big.length){W('Números grandes',`Multiplicaciones con resultados hasta ${fmt(M)}.`);big.forEach(b=>add(...b))}
+  const B2=max(11,min(99,fl(M/9)));
+  W('Problemas reales','Lee con calma, piensa qué se repite y multiplica.');
+  add('p1','Problemas sencillos',()=>pMul([2,S],[2,S]),{mode:'mix'});
+  add('p2','Problemas con las tablas',()=>pMul([2,T],[2,T]));
+  add('p3','Problemas con números grandes',()=>pMul([2,9],[11,B2]));
+  add('p4','Compras y medidas',()=>pMulMeasure([2,9],[2,min(99,max(2,fl(M/9)))],M));
+  add('p5','Problemas de dos pasos',()=>pMul2([2,min(T,9)],[2,T],M));
+  add('p6','Dos pasos con números grandes',()=>pMul2([2,9],[11,B2],M));
+  add('cual','¿Multiplicar o dividir?',()=>pWhich(T));
+  if(cfg.decimals){W('Decimales','Números con coma: se multiplica igual y se cuida la coma.');
+    add('dec1','Decimal × natural',()=>qMulDec(min(T,10)));add('dec2','Problemas con decimales',()=>pMulDec(min(T,10)))}
+  const pool=L.filter(l=>!l.world&&l.id!=='m-grupos').map(l=>l.gen);
+  W('Gran desafío','Un poco de todo, con reloj.');
+  add('jefe','Gran desafío',()=>pick(pool)(),{timer:25,boss:true});
+  return L;
+}
+function buildDiv(){
+  const T=cfg.maxTable,M=cfg.maxNum,S=min(T,5),L=[];
+  const W=(name,desc)=>L.push({world:true,name,desc});
+  const add=(id,name,gen,o={})=>L.push(Object.assign({id:'d-'+id,name,gen},o));
+  W('Primeros pasos','Dividir es repartir en partes iguales.');
+  add('rep','Repartir en grupos',()=>{const k=rnd(2,min(4,T)),q=rnd(1,S),n=k*q,d=qDiv(n,k);
+    d.text=`<p class="prompt">Reparte <b>${n}</b> puntos en <b>${k}</b> grupos iguales. ¿Cuántos quedan en cada grupo?</p>${dots(1,n).replace('--c:'+n,'--c:'+min(n,10)).replace(/--s:\d+px/,'--s:15px')}<div class="op sm">${n} ÷ ${k} = ?</div>`;
+    d.hint=`<p>Así quedan repartidos:</p>${groups(k,q)}`;return d},{mode:'choice'});
+  add('uno','÷ 1 y ÷ el mismo número',()=>{const t=rnd(0,2),n=rnd(2,T*2);return t===0?qDiv(n,1):t===1?qDiv(n,n):qDiv(0,rnd(2,T))},{mode:'mix'});
+  W('Divisiones de las tablas',`Dividir por 2 hasta dividir por ${T}.`);
+  for(let k=2;k<=T;k++)add('t'+k,'Dividir por '+k,()=>qDiv(k*rnd(1,T),k),{mode:'mix'});
+  W('Mezclas','Divisiones revueltas, números perdidos y contrarreloj.');
+  add('mixA',`Mezcla del 2 al ${min(5,T)}`,()=>{const k=rnd(2,min(5,T));return qDiv(k*rnd(1,T),k)});
+  if(T>5)add('mixB',`Mezcla del 6 al ${T}`,()=>{const k=rnd(6,T);return qDiv(k*rnd(1,T),k)});
+  add('rel','La multiplicación ayuda',()=>{const k=rnd(2,T),q=rnd(2,T),n=k*q,d=qDiv(n,k);
+    d.text=`<p class="prompt">Si <b>${k} × ${q} = ${fmt(n)}</b>…</p><div class="op">${fmt(n)} ÷ ${k}</div>`;d.hint='La división es la operación inversa de la multiplicación: mira los números que ya tienes arriba.';return d},{mode:'mix'});
+  add('mixC','Todas las divisiones',()=>{const k=rnd(2,T);return qDiv(k*rnd(2,T),k)});
+  add('falta','Número perdido',()=>{const k=rnd(2,T),q=rnd(2,T),n=k*q,w=Math.random()<.5;
+    const t=w?`<span class="gap">?</span> ÷ ${k} = ${q}`:`${fmt(n)} ÷ <span class="gap">?</span> = ${q}`;
+    return {type:'div',kind:'num',answer:w?n:k,text:`<div class="${opCls(t)}">${t}</div>`,explain:`${fmt(n)} ÷ ${k} = ${q}, el número perdido es <b>${fmt(w?n:k)}</b>`,hint:w?`Multiplica: ${k} × ${q}.`:`¿Qué número multiplicado por ${q} da ${fmt(n)}?`}});
+  add('rapido','Contrarreloj',()=>{const k=rnd(2,T);return qDiv(k*rnd(2,T),k)},{timer:10});
+  const big=[],mx=[10,100,1000].filter(m=>m*2<=M);
+  if(mx.length)big.push(['x10','÷ 10, ÷ 100 y ÷ 1.000',()=>{const m=pick(mx),q=rnd(2,min(99,fl(M/m)));return qDiv(q*m,m)}]);
+  if(M>=22)big.push(['2d1','2 cifras ÷ 1 cifra',()=>{const k=rnd(2,9),hi=fl(min(99,M)/k),lo=min(hi,max(Math.ceil(10/k),T+1));return qDiv(k*rnd(lo,hi),k)}]);
+  if(M>=200)big.push(['3d1','3 cifras ÷ 1 cifra',()=>{const k=rnd(2,9),lo=Math.ceil(100/k),hi=max(lo,fl(min(999,M)/k));return qDiv(k*rnd(lo,hi),k)}]);
+  if(M>=500)big.push(['dk2','Dividir por 2 cifras',()=>{const k=rnd(11,min(99,fl(M/2))),q=rnd(2,min(99,fl(M/k)));return qDiv(k*q,k)}]);
+  if(M>=10000)big.push(['4d1','4 cifras ÷ 1 cifra',()=>{const k=rnd(2,9),lo=Math.ceil(1000/k),hi=max(lo,fl(min(9999,M)/k));return qDiv(k*rnd(lo,hi),k)}]);
+  if(M>=100000)big.push(['grande','Divisiones gigantes',()=>{const k=rnd(11,99),q=rnd(100,max(100,min(9999,fl(M/k))));return qDiv(k*q,k)}]);
+  if(big.length){W('Números grandes',`Divisiones exactas con números hasta ${fmt(M)}.`);big.forEach(b=>add(...b))}
+  if(cfg.remainders){W('Con resto','A veces no se puede repartir todo: lo que queda es el resto.');
+    add('r1','Divisiones con resto',()=>{const k=rnd(2,min(9,T)),q=rnd(1,T),r=rnd(1,k-1);return qRem(k*q+r,k)});
+    add('r2','Resto con números grandes',()=>{const k=rnd(2,9),q=rnd(10,max(10,min(999,fl((M-9)/k))));return qRem(k*q+rnd(1,k-1),k)});
+    add('rp','Problemas con resto',()=>pRem([2,min(9,T)],[2,T]))}
+  const Q3=max(11,min(99,fl(M/9)));
+  W('Problemas reales','Reparte, arma grupos y decide qué hacer con lo que sobra.');
+  add('p1','Problemas sencillos',()=>pDiv([2,S],[2,S]),{mode:'mix'});
+  add('p2','Problemas con las tablas',()=>pDiv([2,T],[2,T]));
+  add('p3','Problemas con números grandes',()=>pDiv([2,9],[11,Q3]));
+  add('p4','¿Cuántos se necesitan?',()=>pDivCF([2,min(9,T)],[2,max(2,min(T,fl((M-9)/9)))]));
+  add('p5','Problemas de dos pasos',()=>pDiv2([2,min(9,T)],[2,T],M));
+  add('p6','Dos pasos con números grandes',()=>pDiv2([2,9],[11,Q3],M));
+  add('cual','¿Multiplicar o dividir?',()=>pWhich(T));
+  if(cfg.decimals){W('Decimales','Cuando sobra, se puede seguir repartiendo con coma.');
+    add('dec1','Divisiones con decimales',()=>qDivDec(min(T,10)));add('dec2','Problemas con decimales',()=>pDivDec(min(T,10)))}
+  const pool=L.filter(l=>!l.world&&l.id!=='d-rep').map(l=>l.gen);
+  W('Gran desafío','Un poco de todo, con reloj.');
+  add('jefe','Gran desafío',()=>pick(pool)(),{timer:25,boss:true});
+  return L;
+}
+const build=c=>c==='mul'?buildMul():buildDiv();
+
+/* ---------- sonido y efectos ---------- */
+let AC=null;
+function tone(f,d=.12,type='sine',when=0,vol=.14){if(!cfg.sound)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const t=AC.currentTime+when,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.03)}catch(e){}}
+const sfx={ok(){tone(660,.1,'triangle');tone(990,.18,'triangle',.09)},bad(){tone(180,.25,'square',0,.05)},tap(){tone(500,.035,'sine',0,.04)},win(){[523,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',i*.12))}};
+const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+const cv=$('#fx'),cx=cv.getContext('2d');let parts=[],raf=0;
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function confetti(n,x,y){if(reduced)return;const cs=getComputedStyle(document.documentElement),cols=['--mul','--div','--sun','--ok'].map(v=>cs.getPropertyValue(v).trim());
+  cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;
+  for(let i=0;i<n;i++)parts.push({x:x??innerWidth/2,y:y??innerHeight/3,vx:(Math.random()-.5)*12,vy:-Math.random()*12-3,r:Math.random()*6+4,c:pick(cols),a:Math.random()*6,va:(Math.random()-.5)*.4,life:90+Math.random()*40});
+  if(!raf)raf=requestAnimationFrame(tick)}
+function tick(){const d=devicePixelRatio;cx.clearRect(0,0,cv.width,cv.height);parts=parts.filter(p=>p.life-->0);
+  parts.forEach(p=>{p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.a+=p.va;cx.save();cx.translate(p.x*d,p.y*d);cx.rotate(p.a);cx.fillStyle=p.c;cx.globalAlpha=min(1,p.life/30);cx.fillRect(-p.r*d/2,-p.r*d/4,p.r*d,p.r*d/2);cx.restore()});
+  raf=parts.length?requestAnimationFrame(tick):0}
+(function sky(){const s=$('#sky'),ch=['×','÷','=','2','5','7','×','÷','3','9','=','×'];let h='';ch.forEach((c,i)=>{h+=`<span style="color:var(${["--mul","--div","--grape","--orange","--sun","--lime"][i%6]});left:${(i*8.3+Math.random()*5)%96}%;font-size:${28+Math.random()*46}px;animation-duration:${22+Math.random()*24}s;animation-delay:-${Math.random()*40}s">${c}</span>`});s.innerHTML=h})();
+
+/* ---------- navegación ---------- */
+let cat='mul',L=[],cur=null;
+function show(name){['home','map','play','result','settings','players'].forEach(s=>{$('#s-'+s).hidden=s!==name});$('#s-'+name).scrollTop=0}
+const starsHTML=(n,cls='stars')=>`<span class="${cls}" aria-label="${n} de 3 estrellas">`+[1,2,3].map(i=>`<span class="${i<=n?'on':''}">★</span>`).join('')+'</span>';
+function tally(c){const lv=build(c).filter(l=>!l.world);const got=lv.reduce((s,l)=>s+(prog[l.id]||0),0);return {got,total:lv.length*3,levels:lv.length,done:lv.filter(l=>prog[l.id]).length}}
+function renderHome(){
+  document.body.dataset.cat='mul';
+  ['mul','div'].forEach(c=>{const t=tally(c);$('#m-'+c).style.width=(t.got/t.total*100)+'%';$('#st-'+c).textContent=`★ ${t.got} de ${t.total} · ${t.done} de ${t.levels} niveles`});
+  $('#cfg-chip').textContent=`Tablas hasta el ${cfg.maxTable} · Números hasta ${fmt(cfg.maxNum)}`;
+  const live=P.streak.last===today()||P.streak.last===ydayStr();
+  $('#go-players').textContent=`${P.avatar} ${P.name}`+(live&&P.streak.days?` · 🔥 ${P.streak.days}`:'');
+  $('#howto').textContent=`Cada nivel tiene ${cfg.perLevel} ejercicios. Gana hasta 3 estrellas y se abre el siguiente nivel.`;
+  show('home');
+}
+const LOCK='<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8.2 10.5V7.8a3.8 3.8 0 0 1 7.6 0v2.7" fill="none" stroke="currentColor" stroke-width="2.6"/></svg>';
+const WC={mul:['mul','grape','orange','div','lime'],div:['div','grape','mul','orange','lime']};
+function renderMap(){
+  document.body.dataset.cat=cat;L=build(cat);
+  $('#map-title').textContent=cat==='mul'?'Multiplicación':'División';
+  const t=tally(cat);$('#map-total').innerHTML=`<b>★</b> ${t.got}/${t.total}`;
+  let out='',open=false,n=0,unl=true,nextMarked=false,w=0;
+  for(const l of L){
+    if(l.world){if(open)out+='</div></section>';w++;const wc=WC[cat][(w-1)%WC[cat].length];out+=`<section class="world" style="--accent:var(--${wc})"><div class="world-head"><span>Mundo ${w}</span><h3>${l.name}</h3><p>${l.desc}</p></div><div class="path">`;open=true;continue}
+    n++;const st=prog[l.id]||0,can=cfg.unlockAll||unl,isNext=can&&!st&&!nextMarked;if(isNext)nextMarked=true;
+    out+=`<div class="node-wrap p${(n-1)%4}"><button class="node${can?'':' locked'}${isNext?' next':''}" data-id="${l.id}" ${can?'':'disabled'} aria-label="Nivel ${n}: ${l.name}${can?'':' (bloqueado)'}">${can?n:LOCK}</button><span class="nname">${l.name}</span>${starsHTML(st)}</div>`;
+    unl=st>0;
+  }
+  if(open)out+='</div></section>';
+  $('#map').innerHTML=out;show('map');
+  const nx=$('#map .node.next');if(nx)setTimeout(()=>nx.scrollIntoView({block:'center',behavior:reduced?'auto':'smooth'}),60);
+}
+
+/* ---------- partida ---------- */
+function distract(q){
+  const a=q.answer,dec=q.kind==='dec',c=[];
+  if(dec)c.push(a+.5,a-.5,a+1,a-1,a*10,a/10,a+.1);
+  else{c.push(a+1,a-1,a+2,a-2,a+10,a-10);
+    if(q.type==='mul'&&q.a!=null&&q.b!=null){c.push(q.a*(q.b+1),q.a*(q.b-1),(q.a+1)*q.b,q.a+q.b)}
+    else c.push(a+3,a*2,a-3)}
+  const ok=[...new Set(c.map(r2))].filter(x=>isFinite(x)&&x>=0&&x!==a&&(dec||Number.isInteger(x)));
+  const pickd=shuffle(ok).slice(0,3);let k=3;while(pickd.length<3){const x=a+k++;if(!pickd.includes(x))pickd.push(x)}
+  return shuffle([a,...pickd]);
+}
+function makeQs(lv,N){const out=[],seen=new Set();let tries=0;
+  while(out.length<N&&tries<N*30){tries++;const q=lv.gen(),key=q.text+'|'+q.answer+'|'+(q.answer2??'');if(seen.has(key)&&tries<N*25)continue;seen.add(key);out.push(q)}
+  out.forEach((q,i)=>{q.mode=q.kind==='qr'?'keypad':lv.mode==='choice'?'choice':lv.mode==='mix'?(i<Math.ceil(N/2)?'choice':'keypad'):'keypad'});return out}
+function startLevel(id){
+  const i=L.findIndex(l=>l.id===id);if(i<0)return;const lv=L[i],N=lv.boss?cfg.perLevel+4:cfg.perLevel;
+  cur={lv,i,num:L.slice(0,i+1).filter(l=>!l.world).length,qs:makeQs(lv,N),qi:0,errors:0,first:0,t0:Date.now()};
+  $('#p-name').textContent=`Nivel ${cur.num} · ${lv.name}`;show('play');renderQ();
+}
+let buf=['',''],slot=0,locked=false,tries=0,timerRaf=0,tEnd=0,tLen=0;
+function renderQ(){
+  const q=cur.qs[cur.qi];buf=['',''];slot=0;locked=false;tries=0;
+  $('#p-count').textContent=`${cur.qi+1}/${cur.qs.length}`;$('#p-fill').style.width=(cur.qi/cur.qs.length*100)+'%';
+  $('#q-body').innerHTML=q.text;const h=$('#q-hint');h.hidden=true;h.innerHTML=q.hint||'';$('#b-hint').hidden=!q.hint;
+  $('#fb').textContent='';$('#fb').className='fb';$('#explain').hidden=true;$('#b-next').hidden=true;
+  const card=$('#qcard');card.classList.remove('good','shake');
+  if(q.mode==='choice'){$('#pad').hidden=true;$('#ansrow').hidden=true;const ch=$('#choices');ch.hidden=false;
+    ch.innerHTML=distract(q).map(v=>`<button class="choice" data-v="${v}">${fmt(v)}</button>`).join('')}
+  else{$('#choices').hidden=true;$('#pad').hidden=false;$('#ansrow').hidden=false;$('#k-comma').disabled=q.kind!=='dec';renderAns()}
+  const secs=cur.lv.timer||(cfg.timer?20:0);stopTimer();
+  if(secs){$('#p-timer').hidden=false;tLen=secs*1000;tEnd=performance.now()+tLen;timerRaf=requestAnimationFrame(tickTimer)}else $('#p-timer').hidden=true;
+}
+function showBuf(s){if(!s)return '';const [i,d]=s.split(',');return i.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+(d!==undefined?','+d:'')}
+function renderAns(){const q=cur.qs[cur.qi];let h='';
+  if(q.kind==='qr')h=`<div class="slotbox"><label>Cada uno</label><div class="slot small${slot===0?' active':''}" data-slot="0">${showBuf(buf[0])}</div></div><div class="slotbox"><label>Sobran</label><div class="slot small${slot===1?' active':''}" data-slot="1">${showBuf(buf[1])}</div></div>`;
+  else h=(q.pre?`<span class="aff">${q.pre}</span>`:'')+`<div class="slot active">${showBuf(buf[0])}</div>`+(q.unit?`<span class="aff">${q.unit}</span>`:'');
+  $('#ansrow').innerHTML=h}
+function tickTimer(now){const left=tEnd-now;$('#p-tfill').style.width=max(0,left/tLen*100)+'%';if(left<=0){timeUp();return}timerRaf=requestAnimationFrame(tickTimer)}
+function stopTimer(){cancelAnimationFrame(timerRaf);timerRaf=0}
+function timeUp(){if(locked)return;stopTimer();cur.errors++;sfx.bad();setFb('Se acabó el tiempo','bad');reveal()}
+function setFb(t,c){const f=$('#fb');f.textContent=t;f.className='fb '+c}
+function press(k){
+  if(locked)return;const q=cur.qs[cur.qi];if(q.mode!=='keypad')return;
+  if(k==='ok')return check();
+  sfx.tap();let s=buf[slot];
+  if(k==='del')s=s.slice(0,-1);
+  else if(k===','){if(q.kind!=='dec'||s.includes(','))return;s=(s||'0')+','}
+  else{if(s.replace(',','').length>=9)return;if(s==='0')s='';if(s.includes(',')&&s.split(',')[1].length>=2)return;s+=k}
+  buf[slot]=s;renderAns();
+}
+function check(){
+  const q=cur.qs[cur.qi];let right;
+  if(q.kind==='qr'){if(slot===0&&buf[0]!==''&&buf[1]===''){slot=1;renderAns();return}if(buf[0]===''||buf[1]===''){setFb('Completa las dos casillas','bad');return}
+    right=+buf[0]===q.answer&&+buf[1]===q.answer2}
+  else{if(buf[0]===''){setFb('Escribe tu respuesta','bad');return}right=Math.abs(parseFloat(buf[0].replace(',','.'))-q.answer)<1e-6}
+  right?onRight():onWrong();
+}
+const PRAISE=['¡Muy bien!','¡Excelente!','¡Eso es!','¡Genial!','¡Perfecto!','¡Bien hecho!','¡Correcto!'];
+function onRight(){locked=true;stopTimer();if(tries===0)cur.first++;sfx.ok();buzz(20);setFb(pick(PRAISE),'ok');
+  const c=$('#qcard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('good');
+  const r=c.getBoundingClientRect();confetti(18,r.left+r.width/2,r.top+r.height/2);setTimeout(nextQ,950)}
+function onWrong(){cur.errors++;tries++;sfx.bad();buzz([30,40,30]);const c=$('#qcard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
+  if(tries>=2){setFb('Así se hace:','bad');reveal();return}
+  setFb('Casi. Revisa y prueba otra vez.','bad');buf=['',''];slot=0;if(cur.qs[cur.qi].mode==='keypad')renderAns()}
+function reveal(){locked=true;stopTimer();const q=cur.qs[cur.qi];const e=$('#explain');e.innerHTML=q.explain;e.hidden=false;
+  $('#pad').hidden=true;$('#ansrow').hidden=true;
+  $('#choices').querySelectorAll('.choice').forEach(b=>{if(+b.dataset.v===q.answer)b.classList.add('right')});
+  $('#b-next').hidden=false;$('#b-next').focus({preventScroll:true});
+  setTimeout(()=>e.scrollIntoView({block:'nearest',behavior:reduced?'auto':'smooth'}),50)}
+function nextQ(){cur.qi++;if(cur.qi>=cur.qs.length)finish();else renderQ()}
+function finish(){stopTimer();$('#p-fill').style.width='100%';
+  const N=cur.qs.length,e=cur.errors,st=e===0?3:e<=Math.ceil(N/4)?2:1;
+  prog[cur.lv.id]=max(prog[cur.lv.id]||0,st);
+  const secs=Math.round((Date.now()-cur.t0)/1000);
+  const S=P.stats[cur.lv.id]||(P.stats[cur.lv.id]={plays:0,best:0,bestOk:0});
+  S.plays++;S.best=S.best?min(S.best,secs):secs;S.bestOk=max(S.bestOk,cur.first);
+  const td=today(),sk=P.streak;
+  if(sk.last!==td){const y=new Date();y.setDate(y.getDate()-1);const yd=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
+    sk.days=sk.last===yd?sk.days+1:1;sk.last=td;sk.best=max(sk.best,sk.days)}
+  saveDb();
+  $('#r-stars').innerHTML=[1,2,3].map(i=>`<span class="${i<=st?'on':''}">★</span>`).join('');
+  $('#r-title').textContent=['','¡Nivel superado!','¡Muy bien!','¡Perfecto!'][st];
+  $('#r-level').textContent=`Nivel ${cur.num} · ${cur.lv.name}`;
+  $('#r-ok').textContent=`${cur.first}/${N}`;$('#r-time').textContent=`${fl(secs/60)}:${String(secs%60).padStart(2,'0')}`;
+  $('#r-next').hidden=!L.slice(cur.i+1).some(l=>!l.world);
+  show('result');sfx.win();setTimeout(()=>confetti(st===3?140:60),200);
+}
+
+/* ---------- eventos ---------- */
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){g.dataset.go==='home'?renderHome():show(g.dataset.go)}});
+document.querySelectorAll('.cat-card').forEach(b=>b.addEventListener('click',()=>{sfx.tap();cat=b.dataset.cat;renderMap()}));
+$('#map').addEventListener('click',e=>{const b=e.target.closest('.node');if(b&&!b.disabled){sfx.tap();startLevel(b.dataset.id)}});
+$('#pad').addEventListener('click',e=>{const b=e.target.closest('.key');if(b)press(b.dataset.k)});
+$('#ansrow').addEventListener('click',e=>{const s=e.target.closest('[data-slot]');if(s&&!locked){slot=+s.dataset.slot;renderAns()}});
+$('#choices').addEventListener('click',e=>{const b=e.target.closest('.choice');if(!b||locked||b.classList.contains('wrong'))return;const q=cur.qs[cur.qi];
+  if(Math.abs(+b.dataset.v-q.answer)<1e-6){b.classList.add('right');onRight()}else{b.classList.add('wrong');onWrong()}});
+$('#b-next').addEventListener('click',()=>{sfx.tap();nextQ()});
+$('#b-hint').addEventListener('click',()=>{const h=$('#q-hint');h.hidden=!h.hidden;sfx.tap()});
+$('#p-back').addEventListener('click',()=>{stopTimer();renderMap()});
+$('#r-again').addEventListener('click',()=>startLevel(cur.lv.id));
+$('#r-map').addEventListener('click',renderMap);
+$('#r-next').addEventListener('click',()=>{const nx=L.slice(cur.i+1).find(l=>!l.world);if(nx)startLevel(nx.id)});
+document.addEventListener('keydown',e=>{if($('#s-play').hidden||!cur)return;const q=cur.qs[cur.qi];
+  if(locked&&e.key==='Enter'&&!$('#b-next').hidden){e.preventDefault();nextQ();return}
+  if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('del');else if(e.key===','||e.key==='.')press(',');else if(e.key==='Enter'){e.preventDefault();press('ok')}
+  else if(e.key==='Tab'&&q&&q.kind==='qr'&&!locked){e.preventDefault();slot=1-slot;renderAns()}});
+
+/* ---------- ajustes ---------- */
+const BOUNDS={maxTable:[3,20],perLevel:[4,20]};
+function renderSettings(){$('#v-maxTable').textContent=cfg.maxTable;$('#v-perLevel').textContent=cfg.perLevel;$('#maxNum').value=String(cfg.maxNum);
+  document.querySelectorAll('.toggle').forEach(t=>t.setAttribute('aria-checked',String(!!cfg[t.dataset.key])));
+  const r=$('#b-reset');r.textContent='Borrar progreso';r.dataset.arm=''}
+$('#go-settings').addEventListener('click',()=>{renderSettings();show('settings')});
+document.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.step,[lo,hi]=BOUNDS[k];cfg[k]=min(hi,max(lo,cfg[k]+(+b.dataset.d)));saveCfg();sfx.tap();renderSettings()}));
+$('#maxNum').addEventListener('change',e=>{cfg.maxNum=+e.target.value;saveCfg()});
+document.querySelectorAll('.toggle').forEach(t=>t.addEventListener('click',()=>{cfg[t.dataset.key]=!cfg[t.dataset.key];saveCfg();sfx.tap();renderSettings()}));
+$('#b-reset').addEventListener('click',e=>{const b=e.currentTarget;if(b.dataset.arm){P.prog=prog={};P.stats={};saveProg();b.textContent='Progreso borrado';b.dataset.arm='';setTimeout(renderSettings,1500)}else{b.dataset.arm='1';b.textContent='Toca otra vez para borrar'}});
+
+/* ---------- jugadores y copia de seguridad ---------- */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function renderPlayers(){
+  $('#pl-list').innerHTML=Object.values(db.players).map(p=>`<div class="set"><div><b>${p.avatar} ${esc(p.name)}${p.id===db.active?' ✓':''}</b><small>★ ${Object.values(p.prog).reduce((s,v)=>s+v,0)} estrellas</small></div>
+    <div class="stepper"><button data-pl="use" data-id="${p.id}" aria-label="Jugar como ${esc(p.name)}" style="font-size:16px;width:auto;padding:0 10px">Elegir</button><button data-pl="ren" data-id="${p.id}" aria-label="Cambiar nombre" style="font-size:18px">✎</button>${Object.keys(db.players).length>1?`<button data-pl="del" data-id="${p.id}" aria-label="Borrar jugador" style="font-size:18px">🗑</button>`:''}</div></div>`).join('');
+  const lv=Object.keys(P.prog).length,stars=Object.values(P.prog).reduce((s,v)=>s+v,0),plays=Object.values(P.stats).reduce((s,v)=>s+v.plays,0);
+  const bests=Object.values(P.stats).map(s=>s.best).filter(Boolean);
+  $('#pl-name').textContent=P.name;
+  $('#pl-stats').textContent=`★ ${stars} · ${lv} niveles superados · ${plays} partidas · racha actual ${P.streak.days} día(s) · mejor racha ${P.streak.best}`+(bests.length?` · tiempo más corto ${min(...bests)} s`:'');
+  $('#bk-msg').textContent='';
+}
+$('#go-players').addEventListener('click',()=>{renderPlayers();show('players')});
+$('#pl-list').addEventListener('click',e=>{const b=e.target.closest('[data-pl]');if(!b)return;const id=b.dataset.id,p=db.players[id];
+  if(b.dataset.pl==='use')setActive(id);
+  else if(b.dataset.pl==='ren'){const n=prompt('Nombre del jugador',p.name);if(n&&n.trim()){p.name=n.trim().slice(0,16);saveDb()}}
+  else if(b.dataset.pl==='del'){if(confirm(`¿Borrar a ${p.name} y todos sus avances?`)){delete db.players[id];if(db.active===id)setActive(Object.keys(db.players)[0]);else saveDb()}}
+  renderPlayers()});
+$('#pl-add').addEventListener('click',()=>{const n=prompt('Nombre del nuevo jugador','Jugador '+(Object.keys(db.players).length+1));if(!n||!n.trim())return;
+  const p=newPlayer(n.trim().slice(0,16),Object.keys(db.players).length);db.players[p.id]=p;setActive(p.id);renderPlayers()});
+$('#bk-copy').addEventListener('click',async()=>{const code='MYR1:'+btoa(unescape(encodeURIComponent(JSON.stringify(db))));$('#bk-text').value=code;
+  try{await navigator.clipboard.writeText(code);$('#bk-msg').textContent='Código copiado. Guárdalo en un lugar seguro.'}catch(e){$('#bk-text').select();$('#bk-msg').textContent='Selecciona y copia el código de arriba.'}});
+$('#bk-restore').addEventListener('click',()=>{const t=$('#bk-text').value.trim();
+  try{if(!t.startsWith('MYR1:'))throw 0;const d=JSON.parse(decodeURIComponent(escape(atob(t.slice(5)))));
+    if(!d.players||!Object.keys(d.players).length)throw 0;
+    Object.values(d.players).forEach(p=>{p.cfg=Object.assign({},DEF,p.cfg);p.prog=p.prog||{};p.stats=p.stats||{};p.streak=p.streak||{last:'',days:0,best:0}});
+    if(!confirm('Esto reemplaza los avances actuales de este dispositivo. ¿Continuar?'))return;
+    db=d;setActive(d.players[d.active]?d.active:Object.keys(d.players)[0]);renderPlayers();$('#bk-msg').textContent='Avances restaurados.'}
+  catch(e){$('#bk-msg').textContent='El código no es válido.'}});
+
+/* botón atrás de Android */
+try{const A=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
+  A&&A.addListener('backButton',()=>{
+    if(!$('#s-play').hidden){stopTimer();renderMap()}
+    else if(!$('#s-result').hidden)renderMap();
+    else if(!$('#s-home').hidden)A.exitApp();
+    else renderHome()})}catch(e){}
+
+renderHome();
+})();
+</script>
+
+</body></html>

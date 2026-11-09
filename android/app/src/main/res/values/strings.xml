@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Multiplica y Reparte</string>
+    <string name="title_activity_main">Multiplica y Reparte</string>
+    <string name="package_name">cl.multiplicayreparte.app</string>
+    <string name="custom_url_scheme">cl.multiplicayreparte.app</string>
+</resources>

@@ -1,0 +1,6 @@
+{
+  "appId": "cl.multiplicayreparte.app",
+  "appName": "Multiplica y Reparte",
+  "webDir": "www",
+  "android": { "backgroundColor": "#E8F5FF" }
+}
